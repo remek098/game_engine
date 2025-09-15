@@ -3,6 +3,10 @@
 #include "core/logger.h"
 #include "core/kmemory.h"
 
+
+#include "containers/darray.h"
+#include "containers/darray.cpp"
+
 b8 application::is_initialized = false;
 application_state application::app_state;
 
@@ -36,6 +40,18 @@ b8 application::create(game* game_inst) {
     KINFO("Test message: %f", 3.14f);
     KDEBUG("Test message: %f", 3.14f);
     KTRACE("Test message: %f", 3.14f);
+
+    u32 arr[3] = {5, 6, 7};
+    darray<u32> vec(arr, 3);
+    vec.push(4);
+    vec.insert_at(2, 21);
+
+    KINFO("vec length is: %i", vec.get_length());
+    
+    for(u32 i = 0; i < vec.get_length(); i++) {
+        KINFO("vec[%i] = %i", i, vec[i]);
+    }
+    // vec.destroy();
 
     app_state.is_running = true;
     app_state.is_suspended = false;
