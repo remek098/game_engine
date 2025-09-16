@@ -2,10 +2,11 @@
 #include "game_types.h"
 #include "core/logger.h"
 #include "core/kmemory.h"
+#include "core/event.h"
 
 
 #include "containers/darray.h"
-#include "containers/darray.cpp"
+// #include "containers/darray.cpp"
 
 b8 application::is_initialized = false;
 application_state application::app_state;
@@ -51,10 +52,25 @@ b8 application::create(game* game_inst) {
     for(u32 i = 0; i < vec.get_length(); i++) {
         KINFO("vec[%i] = %i", i, vec[i]);
     }
+
+    u32 buff;
+    vec.pop_at(2, &buff);
+
+    KINFO("vec length is: %i", vec.get_length());
+    
+    for(u32 i = 0; i < vec.get_length(); i++) {
+        KINFO("vec[%i] = %i", i, vec[i]);
+    }
     // vec.destroy();
 
     app_state.is_running = true;
     app_state.is_suspended = false;
+
+    if(!event_system::initialize()) {
+        KERROR("Event system failed initialization. Application cannot continue.");
+        return false;
+    }
+    
 
     // deleted at the end of application::run()
     platform* pt = new platform();
@@ -108,6 +124,8 @@ b8 application::run() {
     }
     // application should not run anymore after exiting while loop -> sanity check
     app_state.is_running = false;
+
+    event_system::shutdown();
 
     app_state.platform->shutdown();
     

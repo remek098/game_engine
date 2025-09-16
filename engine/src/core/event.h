@@ -29,6 +29,12 @@ typedef b8 (*PFN_on_event)(u16 code, void* sender, void* listener_inst, event_co
 
 struct event_system_state;
 
+/**
+ * @brief This event system is immediate. Will have to multi-thread this later on.
+ * 
+ * Will have to define priority of event messages later on too.
+ * 
+ */
 class event_system {
 public:
     static b8 initialize();
