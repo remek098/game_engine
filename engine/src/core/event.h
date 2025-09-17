@@ -21,6 +21,8 @@ typedef struct event_context {
 
         char c[16];
     } data;
+
+    const u16 get_key_code() const { return data.u16[0]; }
     
 } event_context;
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "defines.h"
 #include "platform/platform.h"
+#include "core/event.h"
 // #include "game_types.h"
 
 struct game;
@@ -40,5 +41,8 @@ public:
     static b8 create(struct game* game_inst);
     static b8 run();
 private:
+    // application's event handlers
+    static b8 app_on_event(u16 code, void* sender, void* listener_inst, event_context context);
+    static b8 app_on_key(u16 code, void* sender, void* listener_inst, event_context context);
 
 };

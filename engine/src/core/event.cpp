@@ -41,7 +41,8 @@ b8 event_system::initialize() {
 void event_system::shutdown() {
     // free the events arrays. And objects pointed to should be destroyed on their own.
     for(u16 i = 0; i < MAX_MESSAGE_CODES; ++i) {
-        if(state.registered[i].events.get_length() > 0) {
+        // && state.registered[i].events.is_valid() -> can be extra caution about memory stuff if you want to. Doesn't really matter at least for now
+        if(state.registered[i].events.get_length() > 0 && state.registered[i].events.is_valid()) {
             // make sure all registered events are being destroyed (whole array's memory is freed)
             state.registered[i].events.destroy();
         }
@@ -94,7 +95,7 @@ b8 event_system::unregister_event(u16 code, void* listener, PFN_on_event on_even
         if(e.listener == listener && e.callback == on_event) {
             // Found one, execute order 66
             registered_event popped_event;
-            state.registered[i].events.pop_at(i, &popped_event);
+            state.registered[code].events.pop_at(i, &popped_event);
             return true;
         }
     }

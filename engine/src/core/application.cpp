@@ -1,11 +1,13 @@
 #include "application.h"
+
 #include "game_types.h"
+
 #include "core/logger.h"
 #include "core/kmemory.h"
-#include "core/event.h"
+#include "core/input.h"
 
 
-#include "containers/darray.h"
+// #include "containers/darray.h"
 // #include "containers/darray.cpp"
 
 b8 application::is_initialized = false;
@@ -33,6 +35,7 @@ b8 application::create(game* game_inst) {
 
     // Initialize subsystems.
     initialize_logging();
+    input_system::initialize();
 
     // TODO: Remove this.
     KFATAL("Test message: %f", 3.14f);
@@ -42,25 +45,25 @@ b8 application::create(game* game_inst) {
     KDEBUG("Test message: %f", 3.14f);
     KTRACE("Test message: %f", 3.14f);
 
-    u32 arr[3] = {5, 6, 7};
-    darray<u32> vec(arr, 3);
-    vec.push(4);
-    vec.insert_at(2, 21);
+    // u32 arr[3] = {5, 6, 7};
+    // darray<u32> vec(arr, 3);
+    // vec.push(4);
+    // vec.insert_at(2, 21);
 
-    KINFO("vec length is: %i", vec.get_length());
+    // KINFO("vec length is: %i", vec.get_length());
     
-    for(u32 i = 0; i < vec.get_length(); i++) {
-        KINFO("vec[%i] = %i", i, vec[i]);
-    }
+    // for(u32 i = 0; i < vec.get_length(); i++) {
+    //     KINFO("vec[%i] = %i", i, vec[i]);
+    // }
 
-    u32 buff;
-    vec.pop_at(2, &buff);
+    // u32 buff;
+    // vec.pop_at(2, &buff);
 
-    KINFO("vec length is: %i", vec.get_length());
+    // KINFO("vec length is: %i", vec.get_length());
     
-    for(u32 i = 0; i < vec.get_length(); i++) {
-        KINFO("vec[%i] = %i", i, vec[i]);
-    }
+    // for(u32 i = 0; i < vec.get_length(); i++) {
+    //     KINFO("vec[%i] = %i", i, vec[i]);
+    // }
     // vec.destroy();
 
     app_state.is_running = true;
@@ -70,6 +73,10 @@ b8 application::create(game* game_inst) {
         KERROR("Event system failed initialization. Application cannot continue.");
         return false;
     }
+
+    event_system::register_event(EVENT_CODE_APPLICATION_QUIT, 0, &application::app_on_event);
+    event_system::register_event(EVENT_CODE_KEY_PRESSED, 0, &application::app_on_key);
+    event_system::register_event(EVENT_CODE_KEY_RELEASED, 0, &application::app_on_key);
     
 
     // deleted at the end of application::run()
@@ -119,13 +126,25 @@ b8 application::run() {
                 app_state.is_running = false;
                 break;
             }
+
+            // NOTE: Input update/state copying should always be handled after any input should be recorded;
+            // i.e. before this line.
+            // as a safety, input is the last thing to be updated before this frame ends.
+            input_system::update(0);
         }
 
     }
     // application should not run anymore after exiting while loop -> sanity check
     app_state.is_running = false;
 
+    // probably not needed but just to be explicit
+    // unregister tracked by application events before shutting down event_system
+    event_system::unregister_event(EVENT_CODE_APPLICATION_QUIT, 0, &application::app_on_event);
+    event_system::unregister_event(EVENT_CODE_KEY_PRESSED, 0, &application::app_on_key);
+    event_system::unregister_event(EVENT_CODE_KEY_RELEASED, 0, &application::app_on_key);
+
     event_system::shutdown();
+    input_system::shutdown();
 
     app_state.platform->shutdown();
     
@@ -134,4 +153,49 @@ b8 application::run() {
 
     
     return true;
+}
+
+b8 application::app_on_event(u16 code, void* sender, void* listener_inst, event_context context) {
+    switch(code) {
+        case EVENT_CODE_APPLICATION_QUIT: {
+            KINFO("EVENT_CODE_APPLICATION_QUIT received, shutting down. \n");
+            app_state.is_running = false;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+b8 application::app_on_key(u16 code, void* sender, void* listener_inst, event_context context) {
+    
+    if(code == EVENT_CODE_KEY_PRESSED) {
+        u16 key_code = context.get_key_code(); // context.data.u16[0];
+        if(key_code == KEYBOARD_KEY_ESCAPE) {
+            // NOTE: technically firing an event to itself, but there may be listeners
+            event_context data = {};
+            event_system::fire_event(EVENT_CODE_APPLICATION_QUIT, 0, data);
+
+            // blocking anything else from processing this
+            return true;
+        }
+        else if(key_code == KEYBOARD_KEY_A) {
+            // example
+            KDEBUG("Explicit - A was pressed!");
+        }
+        else {
+            KDEBUG("'%c' key released in window", key_code);
+        }
+    }
+    else if(code == EVENT_CODE_KEY_RELEASED) {
+        u16 key_code = context.get_key_code();// context.data.u16[0]; // in input_system::process_key first u16 (of index 0) is set to a key_code
+        if(key_code == KEYBOARD_KEY_B) {
+            // example
+            KDEBUG("Explicit - B was pressed!");
+        }
+        else {
+            KDEBUG("'%c' key released in window", key_code);
+        }
+    }
+    return false;
 }

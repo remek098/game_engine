@@ -116,7 +116,7 @@ public:
 
 
     b8 is_valid() const {
-        return array != nullptr && capacity > 0;
+        return array != nullptr && length > 0 && capacity > 0;
     }
 
 
