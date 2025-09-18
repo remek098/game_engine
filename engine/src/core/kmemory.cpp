@@ -40,7 +40,8 @@ void kmemory::initialize() {
 }
 
 void kmemory::shutdown() {
-
+    KINFO("From kmemory::shutdown():");
+    KINFO(get_memory_usage_string());
 }
 
 
@@ -54,7 +55,7 @@ void* kmemory::allocate(u64 size, memory_tags tag) {
 
     // TODO: Memory alignment
     void* block = platform::allocate(size, false);
-    KDEBUG("kmemory::allocate -> DARRAY allocation size: %i", stats.tagged_allocations[MEMORY_TAG_DARRAY]);
+    // KDEBUG("kmemory::allocate -> DARRAY allocation size: %i", stats.tagged_allocations[MEMORY_TAG_DARRAY]);
     platform::zero_memory(block, size);
     return block;
 }
@@ -70,7 +71,8 @@ void kmemory::free(void* block, u64 size, memory_tags tag) {
     
     // TODO: Memory alignment
     platform::free(block, false);
-    KDEBUG("kmemory::free -> DARRAY allocation size: %i", stats.tagged_allocations[MEMORY_TAG_DARRAY]);
+    // KDEBUG("kmemory::free -> DARRAY allocation size: %i", stats.tagged_allocations[MEMORY_TAG_DARRAY]);
+    // KINFO(kmemory::get_memory_usage_string());
 }
 
 

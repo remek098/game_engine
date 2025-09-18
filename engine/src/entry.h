@@ -44,6 +44,7 @@ int main() {
     delete app;
     // delete game_inst;
     kmemory::shutdown();
-    
+    // KINFO("From main():")
+    // KINFO(kmemory::get_memory_usage_string());
     return 0;
 }

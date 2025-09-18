@@ -19,7 +19,6 @@ application:: application()
 
 application::~application() {
     // delete app_state.platform;
-
 }
 
 b8 application::create(game* game_inst) {
@@ -143,6 +142,8 @@ b8 application::run() {
     event_system::unregister_event(EVENT_CODE_KEY_PRESSED, 0, &application::app_on_key);
     event_system::unregister_event(EVENT_CODE_KEY_RELEASED, 0, &application::app_on_key);
 
+    // event_system::shutdown() automatically cleans up all events. Ofc we will have to unregister events
+    // during runtime of application later on.
     event_system::shutdown();
     input_system::shutdown();
 
@@ -151,7 +152,8 @@ b8 application::run() {
     if(app_state.platform)
         delete app_state.platform;
 
-    
+    // KINFO("From application::run:")
+    // KINFO(kmemory::get_memory_usage_string());
     return true;
 }
 

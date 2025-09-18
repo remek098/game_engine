@@ -25,7 +25,7 @@ typedef struct event_system_state {
 
 // Event system internal state
 b8                  event_system::is_initialized = false;
-event_system_state  event_system::state;
+event_system_state  event_system::state = {};
 
 b8 event_system::initialize() {
     if(is_initialized == true) {
@@ -41,12 +41,15 @@ b8 event_system::initialize() {
 void event_system::shutdown() {
     // free the events arrays. And objects pointed to should be destroyed on their own.
     for(u16 i = 0; i < MAX_MESSAGE_CODES; ++i) {
-        // && state.registered[i].events.is_valid() -> can be extra caution about memory stuff if you want to. Doesn't really matter at least for now
-        if(state.registered[i].events.get_length() > 0 && state.registered[i].events.is_valid()) {
-            // make sure all registered events are being destroyed (whole array's memory is freed)
+        // length can be 0 if we were unregistering events in runtime of app correctly.
+        // capacity remains, we need to free that memory
+        if(state.registered[i].events.get_capacity() > 0) {   
+        // make sure all registered events are being destroyed (whole array's memory is freed)
             state.registered[i].events.destroy();
         }
     }
+    
+    is_initialized = false;
 }
 
 b8 event_system::register_event(u16 code, void* listener, PFN_on_event on_event) {
@@ -96,6 +99,7 @@ b8 event_system::unregister_event(u16 code, void* listener, PFN_on_event on_even
             // Found one, execute order 66
             registered_event popped_event;
             state.registered[code].events.pop_at(i, &popped_event);
+            
             return true;
         }
     }

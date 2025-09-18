@@ -2,6 +2,8 @@
 #include "core/logger.h"
 #include "core/input.h"
 
+#include "core/event.h"
+
 #if KPLATFORM_WINDOWS
 
 #include <windows.h>
@@ -210,10 +212,12 @@ LRESULT CALLBACK win32_process_messages(HWND hWnd, u32 msg, WPARAM w_param, LPAR
         case WM_ERASEBKGND:
             // Notify OS that erasing will be handled by the application to prevent flicker.
             return 1;
-        case WM_CLOSE:
+        case WM_CLOSE: {
+            event_context data = {};
+            event_system::fire_event(EVENT_CODE_APPLICATION_QUIT, 0, data);
             // TODO: Fire an event for the application to Quit.
             return 0;
-        
+        }
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
