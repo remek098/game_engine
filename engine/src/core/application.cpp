@@ -6,6 +6,8 @@
 #include "core/kmemory.h"
 #include "core/input.h"
 
+#include "renderer/renderer_frontend.h"
+
 
 // #include "containers/darray.h"
 // #include "containers/darray.cpp"
@@ -92,6 +94,13 @@ b8 application::create(game* game_inst) {
     }
     // delete pt; -> don't do it here, make sure that either in destructor or in application::run() that pointer is destroyed once. 
 
+    // initialize renderer
+    if(!renderer::initialize(game_inst->app_config.name, app_state.platform->plat_state)) {
+        KFATAL("Failed to initialize renderer. Aborting application");
+        return false;
+    }
+
+
     // initialize the game
     if(!app_state.game_inst->initialize(app_state.game_inst)) {
         KFATAL("Game failed to initialize");
@@ -106,6 +115,14 @@ b8 application::create(game* game_inst) {
 }
 
 b8 application::run() {
+    app_state.clock.start();
+    app_state.clock.update();
+    app_state.last_time = app_state.clock.elapsed;
+
+    [[maybe_unused]] f64 running_time = 0;
+    [[maybe_unused]] u8 frame_count = 0;
+    f64 target_frame_seconds = 1.0f / 60;
+
     KINFO(kmemory::get_memory_usage_string());
 
     while(app_state.is_running) {
@@ -114,22 +131,55 @@ b8 application::run() {
         }
 
         if(!app_state.is_suspended) {
-            if(!app_state.game_inst->update(app_state.game_inst, (f32)0)) {
+
+            // update clock and delta-time
+            app_state.clock.update();
+            f64 current_time = app_state.clock.elapsed;
+            f64 delta = (current_time - app_state.last_time);
+            f64 frame_start_time = platform::get_absolute_time();
+
+            if(!app_state.game_inst->update(app_state.game_inst, (f32)delta)) {
                 KFATAL("Game update failed, shutting down.");
                 app_state.is_running = false;
                 break;
             }
             // render routine
-            if(!app_state.game_inst->render(app_state.game_inst, (f32)0)) {
+            if(!app_state.game_inst->render(app_state.game_inst, (f32)delta)) {
                 KFATAL("Game render failed, shutting down.");
                 app_state.is_running = false;
                 break;
             }
 
+            // TODO: refactor packet creation
+            render_packet packet;
+            packet.delta_time = delta;
+            renderer::draw_frame(&packet);
+
+            // figure out how long the frame took 
+            f64 frame_end_time = platform::get_absolute_time();
+            f64 frame_elapsed_time = frame_end_time - frame_start_time;
+            running_time += frame_elapsed_time;
+            f64 remaining_seconds  = target_frame_seconds - frame_elapsed_time;
+
+            if(remaining_seconds > 0) {
+                u64 remaining_ms = (remaining_seconds * 1000);
+
+                // if there's time left, give it back to OS
+                b8 limit_frames = false;
+                if(remaining_ms > 0 && limit_frames) {
+                    platform::sleep(remaining_ms - 1);
+                }
+
+                frame_count++;
+            }
+
             // NOTE: Input update/state copying should always be handled after any input should be recorded;
             // i.e. before this line.
             // as a safety, input is the last thing to be updated before this frame ends.
-            input_system::update(0);
+            input_system::update(delta);
+
+            // update last_time for next frame
+            app_state.last_time = current_time;
         }
 
     }
@@ -146,6 +196,8 @@ b8 application::run() {
     // during runtime of application later on.
     event_system::shutdown();
     input_system::shutdown();
+
+    renderer::shutdown();
 
     app_state.platform->shutdown();
     

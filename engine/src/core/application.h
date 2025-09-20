@@ -2,6 +2,7 @@
 #include "defines.h"
 #include "platform/platform.h"
 #include "core/event.h"
+#include "core/clock.h"
 // #include "game_types.h"
 
 struct game;
@@ -13,6 +14,7 @@ typedef struct application_state {
     platform* platform;
     i16 width;
     i16 height;
+    clock clock;
     f64 last_time;
 } application_state;
 

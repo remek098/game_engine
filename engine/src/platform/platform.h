@@ -39,8 +39,10 @@ public:
     static f64  get_absolute_time();
     static void sleep(f64 ms);
     
-private:
+public:
     // could use std::unique_ptr to avoid some extra care
     platform_state* plat_state;
+    
+private:
     const std::string m_class_name = "game_engine";
 };
