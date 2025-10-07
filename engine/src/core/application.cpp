@@ -8,6 +8,8 @@
 
 #include "renderer/renderer_frontend.h"
 
+#include <../../testbed/src/game.h>
+
 
 // #include "containers/darray.h"
 // #include "containers/darray.cpp"
@@ -201,9 +203,12 @@ b8 application::run() {
 
     app_state.platform->shutdown();
     
+    
     if(app_state.platform)
         delete app_state.platform;
 
+
+    kmemory::free(app_state.game_inst->state, sizeof(game_state), MEMORY_TAG_GAME);
     // KINFO("From application::run:")
     // KINFO(kmemory::get_memory_usage_string());
     return true;

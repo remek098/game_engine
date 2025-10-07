@@ -5,6 +5,8 @@
 #include "core/kmemory.h"
 #include "game_types.h"
 
+// #include <../../testbed/src/game.h>
+
 extern b8 create_game(game* out_game);
 
 
@@ -41,10 +43,14 @@ int main() {
         return 2;
     }
 
+    
+    
+    
+    // kmemory::free(&game_inst.state, sizeof(game_state), MEMORY_TAG_GAME);
     delete app;
     // delete game_inst;
     kmemory::shutdown();
-    // KINFO("From main():")
+    // KINFO("From main():\n")
     // KINFO(kmemory::get_memory_usage_string());
     return 0;
 }

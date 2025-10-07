@@ -27,3 +27,4 @@ void renderer_backend::destroy(renderer_backend_struct* renderer_backend) {
     
     // renderer_backend->plat_state = nullptr;
 }
+
