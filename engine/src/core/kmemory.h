@@ -43,4 +43,5 @@ public:
     // not ideal, but that's not supposed to be called often, so no real worries about performance
     // Every time you call that, you also have to free the returned char buffer
     static char* get_memory_usage_string();
+    
 };

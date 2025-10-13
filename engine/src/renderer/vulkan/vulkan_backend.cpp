@@ -1,6 +1,7 @@
 #include "vulkan_backend.h"
 
 #include "core/logger.h"
+#include "core/kstring.h"
 
 // static vulkan_context, already zero'ed out by default
 vulkan_context vulkan_renderer_backend::context;
@@ -32,6 +33,8 @@ b8 vulkan_renderer_backend::initialize(renderer_backend_struct* backend, const c
         KERROR("vkCreateInstance failed with result: %u", result );
         return false;
     }
+
+    
 
     KINFO("Vulkan renderer initialized successfully.");
     return true;
