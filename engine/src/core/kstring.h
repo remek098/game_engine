@@ -20,6 +20,7 @@ public:
     kstring duplicate() const;
 
     bool equals(const kstring& other) const;
+    static bool are_equal(const char* str1, const char* str2);
     const char* c_str() const;
 
 private:

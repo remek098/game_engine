@@ -89,6 +89,9 @@ bool kstring::equals(const kstring& other) const {
     return strcmp(data, other.data) == 0;
 }
 
+bool kstring::are_equal(const char* str1, const char* str2) {
+    return strcmp(str1, str2) == 0;
+}
 
 const char* kstring::c_str() const {
     return data;

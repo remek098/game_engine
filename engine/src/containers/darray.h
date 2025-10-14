@@ -30,7 +30,10 @@ class KAPI darray {
 public:
 
 // constructor based and manual option of managing object are available
-    darray() = default;
+    // darray() = default;
+    darray() {
+        create();
+    }
     
 
     darray(u64 initial_capacity) {
@@ -177,8 +180,8 @@ public:
 
         // just copy the value to the end of our darray
         array[length] = value;
-        // basically return value and make sure length is increased by 1 to indicate new element has been added
-        return &array[length++];
+        ++length;
+        return &array[length - 1];
     }
 
 
@@ -217,6 +220,7 @@ public:
     // get fields
     u64 get_capacity() { return capacity; }
     u64 get_length() { return length; }
+    T* get_array() { return array; }
 
 public:
     T* array = nullptr;
