@@ -7,6 +7,14 @@
 // static vulkan_context, already zero'ed out by default
 vulkan_context vulkan_renderer_backend::context;
 
+
+// any forward declerations
+VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
+        VkDebugUtilsMessageTypeFlagsEXT message_types,
+        const VkDebugUtilsMessengerCallbackDataEXT* callback_data,
+        void* user_data);
+
 b8 vulkan_renderer_backend::initialize(renderer_backend_struct* backend, const char* application_name, platform_state* plat_state) {
     // TODO: Custom allocator
     context.allocator = 0;
@@ -116,13 +124,45 @@ b8 vulkan_renderer_backend::initialize(renderer_backend_struct* backend, const c
     create_info.ppEnabledLayerNames = required_validation_layer_names;
 
     VK_CHECK(vkCreateInstance(&create_info, context.allocator, &context.instance));
+    KINFO("-----------------Vulkan instance created.");
+
+// Debugger setup
+#if defined(_DEBUG)
+    KDEBUG("----- Creating Vulkan debugger ....");
+    u32 log_severity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT    | 
+                       VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;  // | 
+                                                                        // VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT     |
+                                                                        // VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
+
+    VkDebugUtilsMessengerCreateInfoEXT debug_create_info = {VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
+    debug_create_info.messageSeverity = log_severity;
+    debug_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT     | 
+                                    VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT | 
+                                    VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+    debug_create_info.pfnUserCallback = vk_debug_callback;
+
+    PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, 
+        "vkCreateDebugUtilsMessengerEXT");
+    
+    KASSERT_MSG(func, "---- Failed to create debug messenger!");
+    VK_CHECK(func(context.instance, &debug_create_info, context.allocator, &context.debug_messenger));
+    KDEBUG("---- Vulkan debugger created.");
+#endif
 
     KINFO("Vulkan renderer initialized successfully.");
     return true;
 }
 
 void vulkan_renderer_backend::shutdown(renderer_backend_struct* backend) {
+    KDEBUG("---- Destroying Vulkan debugger...");
+    if(context.debug_messenger) {
+        PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance , 
+            "vkDestroyDebugUtilsMessengerEXT");
+        func(context.instance, context.debug_messenger, context.allocator);
+    }
 
+    KDEBUG("---- Destroying Vulkan Instance");
+    vkDestroyInstance(context.instance, context.allocator);
 }
 
 void vulkan_renderer_backend::on_resized(renderer_backend_struct* backend, u16 width, u16 height) {
@@ -135,4 +175,28 @@ b8 vulkan_renderer_backend::begin_frame(renderer_backend_struct* backend, f32 de
 
 b8 vulkan_renderer_backend::end_frame(renderer_backend_struct* backend, f32 delta_time) {
     return true;
+}
+
+VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
+        VkDebugUtilsMessageTypeFlagsEXT message_types,
+        const VkDebugUtilsMessengerCallbackDataEXT* callback_data,
+        void* user_data) {
+    
+    switch (message_severity) {
+        default:
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            KERROR(callback_data->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            KWARN(callback_data->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            KINFO(callback_data->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            KTRACE(callback_data->pMessage);
+            break;
+    }
+    return VK_FALSE;
 }
