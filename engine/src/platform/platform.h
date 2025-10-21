@@ -6,6 +6,8 @@
 #include <string>
 #include <cstdint>
 
+// forward declerations for structs and classes
+struct vulkan_context;
 
 typedef struct platform_state {
     void* internal_state;
@@ -38,6 +40,11 @@ public:
     // Timing
     static f64  get_absolute_time();
     static void sleep(f64 ms);
+
+
+    // vulkan related stuff
+    static b8 create_vulkan_surface(struct platform_state* plat_state, struct vulkan_context* context);
+    static void destroy_vulkan_surface(struct vulkan_context* context);
     
 public:
     // could use std::unique_ptr to avoid some extra care

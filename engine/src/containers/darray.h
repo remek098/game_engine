@@ -86,10 +86,21 @@ public:
     }
 
 
-    T& operator[](u64 index) {
+    const T& operator[](u64 index) const {
         KASSERT_MSG(index < length, "Index bigger than length");
-        return array[index];
+        //return array[index];
+        return this->get_array()[index];
     }
+
+    // const T* operator[](u64 index) {
+    //     KASSERT_MSG(index < length, "Index bigger than length");
+    //     return &array[index];
+    // }
+
+    // const T& operator[](u64 index) {
+    //     KASSERT_MSG(index < length, "Index bigger than length");
+    //     return array[index];
+    // }
 
     // creates and allocates completely new empty darray 
     T* create(u64 initial_capacity = DARRAY_DEFAULT_CAPACITY) {
@@ -218,9 +229,9 @@ public:
     }
 
     // get fields
-    u64 get_capacity() { return capacity; }
-    u64 get_length() { return length; }
-    T* get_array() { return array; }
+    u64 get_capacity() const { return capacity; }
+    u64 get_length() const { return length; }
+    T* get_array() const { return array; }
 
 public:
     T* array = nullptr;

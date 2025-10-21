@@ -1,8 +1,11 @@
 #include "vulkan_backend.h"
 
+#include "vulkan_device.h"
+
 #include "core/logger.h"
 #include "core/kstring.h"
 #include "containers/darray.h"
+#include "platform/platform.h"
 
 // static vulkan_context, already zero'ed out by default
 vulkan_context vulkan_renderer_backend::context;
@@ -149,11 +152,27 @@ b8 vulkan_renderer_backend::initialize(renderer_backend_struct* backend, const c
     KDEBUG("---- Vulkan debugger created.");
 #endif
 
+    // surface
+    KDEBUG("Creating Vulkan Surface ...");
+    if(!platform::create_vulkan_surface(plat_state, &context)) {
+        KERROR("Failed to create platform surface!");
+        return false;
+    }
+    KDEBUG("------- Vulkan surface created.");
+
+    // device creation
+    if(!vulkan_device_create(&context)) {
+        KERROR("------------ Failed to create device!");
+        return false;
+    }
+
     KINFO("Vulkan renderer initialized successfully.");
     return true;
 }
 
 void vulkan_renderer_backend::shutdown(renderer_backend_struct* backend) {
+    platform::destroy_vulkan_surface(&context);
+    vulkan_device_destroy(&context);
     KDEBUG("---- Destroying Vulkan debugger...");
     if(context.debug_messenger) {
         PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance , 
