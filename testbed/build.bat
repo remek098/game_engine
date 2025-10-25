@@ -24,7 +24,7 @@
 SetLocal EnableDelayedExpansion
 
 SET assembly=testbed
-SET compilerFlags=-std=c++20 -g -Wall -Werror -D_DEBUG -D_DLL -DKEXPORT
+SET compilerFlags=-std=c++20 -g -Wall -Werror -D_DEBUG -D_DLL -DKEXPORT -Wno-vla-cxx-extension
 SET includeFlags=-Isrc -I../engine/src
 
 SET linkerFlags=-L../bin/ -lengine.lib ^

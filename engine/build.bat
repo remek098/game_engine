@@ -69,7 +69,7 @@
 SetLocal EnableDelayedExpansion
 
 SET assembly=engine
-SET compilerFlags=-std=c++20 -g -Wall -Werror -shared -D_DEBUG -D_DLL -DKEXPORT -D_CRT_SECURE_NO_WARNINGS
+SET compilerFlags=-std=c++20 -g -Wall -Werror -shared -D_DEBUG -D_DLL -DKEXPORT -D_CRT_SECURE_NO_WARNINGS -Wno-vla-cxx-extension
 SET includeFlags=-Isrc -I%VULKAN_SDK%/Include
 
 SET linkerFlags=-luser32 -lkernel32 -lvulkan-1 -L%VULKAN_SDK%/Lib ^
