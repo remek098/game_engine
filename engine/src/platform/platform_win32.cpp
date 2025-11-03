@@ -230,7 +230,10 @@ b8 platform::create_vulkan_surface(struct platform_state* plat_state, struct vul
 }
 
 void platform::destroy_vulkan_surface(struct vulkan_context* context) {
-    vkDestroySurfaceKHR(context->instance, context->surface, context->allocator);
+    if(context->surface) {
+        vkDestroySurfaceKHR(context->instance, context->surface, context->allocator);
+        context->surface = 0;
+    }
 }
 
 LRESULT CALLBACK win32_process_messages(HWND hWnd, u32 msg, WPARAM w_param, LPARAM l_param) {

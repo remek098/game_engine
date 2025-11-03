@@ -13,7 +13,8 @@ public:
     
     static b8 begin_frame(renderer_backend_struct* backend, f32 delta_time);
     static b8 end_frame(renderer_backend_struct* backend, f32 delta_time);
-
+private:
+    static i32 find_memory_index(u32 type_filter, u32 property_flags);
 public:
     static vulkan_context context;
 };
