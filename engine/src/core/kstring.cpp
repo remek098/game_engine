@@ -5,14 +5,16 @@
 
 kstring::kstring(const char* str) {
     length_ = strlen(str);
-    data = static_cast<char*>(kmemory::allocate(length_ + 1, MEMORY_TAG_STRING));
+    // data = static_cast<char*>(kmemory::allocate(length_ + 1, MEMORY_TAG_STRING));
+    data = reinterpret_cast<char*>(kmemory::allocate(length_ + 1, MEMORY_TAG_STRING));
     kmemory::copy(data, str, length_ + 1); // copying +1 of length to ensure the null-terminator '\0' is included inside our string
 }
 
 
 kstring::kstring(const kstring& other) {
     length_ = other.length_;
-    data = static_cast<char*>(kmemory::allocate(length_ + 1, MEMORY_TAG_STRING));
+    // data = static_cast<char*>(kmemory::allocate(length_ + 1, MEMORY_TAG_STRING));
+    data = reinterpret_cast<char*>(kmemory::allocate(length_ + 1, MEMORY_TAG_STRING));
     kmemory::copy(data, other.data, length_ + 1);
 }
 
@@ -26,7 +28,8 @@ kstring& kstring::operator=(const kstring& other) {
     if(this != &other) {
         kmemory::free(data, length_ + 1, MEMORY_TAG_STRING);
         length_ = other.length_;
-        data = static_cast<char*>(kmemory::allocate(length_ + 1, MEMORY_TAG_STRING));
+        // data = static_cast<char*>(kmemory::allocate(length_ + 1, MEMORY_TAG_STRING));
+        data = reinterpret_cast<char*>(kmemory::allocate(length_ + 1, MEMORY_TAG_STRING));
         kmemory::copy(data, other.data, length_ + 1);
     }
     return *this;
@@ -42,7 +45,8 @@ kstring& kstring::operator=(const char* str) {
     u64 new_length = strlen(str);
     kmemory::free(data, length_ + 1, MEMORY_TAG_STRING);
 
-    data = static_cast<char*>(kmemory::allocate(new_length + 1, MEMORY_TAG_STRING));
+    // data = static_cast<char*>(kmemory::allocate(new_length + 1, MEMORY_TAG_STRING));
+    data = reinterpret_cast<char*>(kmemory::allocate(new_length + 1, MEMORY_TAG_STRING));
     kmemory::copy(data, str, new_length + 1);
     length_ = new_length;
     return *this;

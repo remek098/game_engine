@@ -46,7 +46,8 @@ public:
     {
         if(capacity > 0) {
             // for now not aligned by allocate function itself
-            array = static_cast<T*>(kmemory::allocate(capacity * stride, MEMORY_TAG_DARRAY));
+            //array = static_cast<T*>(kmemory::allocate(capacity * stride, MEMORY_TAG_DARRAY));
+            array = reinterpret_cast<T*>(kmemory::allocate(capacity * stride, MEMORY_TAG_DARRAY));
             KASSERT_MSG(array, "Failed to allocate memory in darray copy constructor");
             kmemory::copy(array, other.array, length * stride);
         }
@@ -58,7 +59,8 @@ public:
         stride = sizeof(T);
         length = arr_length;
         capacity = length;
-        array = static_cast<T*>(kmemory::allocate(capacity*stride, MEMORY_TAG_DARRAY));
+        // /array = static_cast<T*>(kmemory::allocate(capacity*stride, MEMORY_TAG_DARRAY));
+        array = reinterpret_cast<T*>(kmemory::allocate(capacity*stride, MEMORY_TAG_DARRAY));
         KASSERT_MSG(array, "Failed to allocate memory.");
         kmemory::copy(array, arr, length*stride);
     }
@@ -71,7 +73,8 @@ public:
             length = other.length;
             stride = other.stride;
             if(other.array && capacity > 0) {
-                array = static_cast<T*>(kmemory::allocate(capacity * stride, MEMORY_TAG_DARRAY));
+                // array = static_cast<T*>(kmemory::allocate(capacity * stride, MEMORY_TAG_DARRAY));
+                array = reinterpret_cast<T*>(kmemory::allocate(capacity * stride, MEMORY_TAG_DARRAY));
                 KASSERT_MSG(array, "Failed to allocate memory in operator=");
                 kmemory::copy(array, other.array, length * stride);
             }
@@ -110,7 +113,8 @@ public:
         length = 0;
         stride = sizeof(T);
         if(capacity > 0) {
-            array = static_cast<T*>(kmemory::allocate(capacity * stride, MEMORY_TAG_DARRAY));
+            //array = static_cast<T*>(kmemory::allocate(capacity * stride, MEMORY_TAG_DARRAY));
+            array = reinterpret_cast<T*>(kmemory::allocate(capacity * stride, MEMORY_TAG_DARRAY));
             KASSERT_MSG(array, "Failed to initialize memory in darray::create");
         }
 
@@ -165,7 +169,8 @@ public:
 
 
         u64 new_capacity = capacity == 0 ? 1 : capacity * DARRAY_RESIZE_FACTOR;
-        T* new_array = static_cast<T*>(kmemory::allocate(new_capacity * stride, MEMORY_TAG_DARRAY));
+        // T* new_array = static_cast<T*>(kmemory::allocate(new_capacity * stride, MEMORY_TAG_DARRAY));
+        T* new_array = reinterpret_cast<T*>(kmemory::allocate(new_capacity * stride, MEMORY_TAG_DARRAY));
         KASSERT_MSG(new_array, "Failed to allocate memory during darray::resize.");
 
         if(array) {

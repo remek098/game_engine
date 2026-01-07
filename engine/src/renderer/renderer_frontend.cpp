@@ -7,7 +7,7 @@
 renderer_backend_struct* renderer::backend = nullptr;
 
 b8 renderer::initialize(const char* application_name, platform_state* plat_state) {
-    backend = static_cast<renderer_backend_struct*>(kmemory::allocate(sizeof(renderer_backend_struct), MEMORY_TAG_RENDERER));
+    backend = reinterpret_cast<renderer_backend_struct*>(kmemory::allocate(sizeof(renderer_backend_struct), MEMORY_TAG_RENDERER));
     
     // TODO: In future maybe make it configurable if e.g. I would want to implement DirectX 12 renderer
     renderer_backend::create(RENDERER_BACKEND_TYPE_VULKAN, plat_state, backend);

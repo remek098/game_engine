@@ -32,6 +32,8 @@ typedef struct vulkan_device {
     VkQueue present_queue;
     VkQueue transfer_queue;
 
+    VkCommandPool graphics_command_pool;
+
     VkPhysicalDeviceProperties properties;
     VkPhysicalDeviceFeatures features;
     VkPhysicalDeviceMemoryProperties memory;
@@ -47,6 +49,26 @@ typedef struct vulkan_image {
     u32 height;
 } vulkan_image;
 
+typedef enum vulkan_renderpass_state {
+    READY,
+    RECORDING,
+    IN_RENDERPASS,
+    RECORDING_ENDED,
+    SUBMITTED,
+    NOT_ALLOCATED
+} vulkan_renderpass_state;
+
+typedef struct vulkan_renderpass {
+    VkRenderPass handle;
+    f32 x, y, w, h;
+    f32 r, g, b, a;
+
+    f32 depth;
+    u32 stencil;
+
+    vulkan_renderpass_state state;
+} vulkan_renderpass;
+
 typedef struct vulkan_swapchain {
     VkSurfaceFormatKHR image_format;
     u8 max_frames_in_flight;
@@ -57,6 +79,21 @@ typedef struct vulkan_swapchain {
 
     vulkan_image depth_attachment;
 } vulkan_swapchain;
+
+typedef enum vulkan_command_buffer_state {
+    COMMAND_BUFFER_STATE_READY,
+    COMMAND_BUFFER_STATE_RECORDING,         // state where we can issue a command
+    COMMAND_BUFFER_STATE_IN_RENDERPASS,     
+    COMMAND_BUFFER_STATE_ENDED,             // we stopped submitting commands
+    COMMAND_BUFFER_STATE_SUBMITTED,         // submit for execution
+    COMMAND_BUFFER_STATE_NOT_ALLOCATED      // starts with this state
+} vulkan_command_buffer_state;
+
+typedef struct vulkan_command_buffer {
+    VkCommandBuffer handle;
+
+    vulkan_command_buffer_state cmd_buff_state;
+} vulkan_command_buffer;
 
 typedef struct vulkan_context {
     // current width and height for framebuffer
@@ -76,6 +113,10 @@ typedef struct vulkan_context {
     vulkan_swapchain swapchain;
     u32 image_index;
     u32 current_frame;
+
+    vulkan_renderpass main_renderpass;
+
+    vulkan_command_buffer* graphics_command_buffers; // darray
 
     b8 recreating_swapchain;
 

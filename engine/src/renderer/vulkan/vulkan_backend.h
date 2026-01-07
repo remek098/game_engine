@@ -15,6 +15,8 @@ public:
     static b8 end_frame(renderer_backend_struct* backend, f32 delta_time);
 private:
     static i32 find_memory_index(u32 type_filter, u32 property_flags);
+    static void create_command_buffers(renderer_backend_struct* backend);
+    // static void free_command_buffers();
 public:
     static vulkan_context context;
 };

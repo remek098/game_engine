@@ -106,6 +106,15 @@ b8 vulkan_device_create(vulkan_context* vk_context) {
     vkGetDeviceQueue(vk_context->device.logical_device, vk_context->device.present_queue_index, 0, &vk_context->device.present_queue);
     vkGetDeviceQueue(vk_context->device.logical_device, vk_context->device.transfer_queue_index, 0, &vk_context->device.transfer_queue);
     KINFO("-- Queues obtained.");
+
+    // Create command pool for graphics queue
+    VkCommandPoolCreateInfo pool_create_info = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+    pool_create_info.queueFamilyIndex = vk_context->device.graphics_queue_index;
+    pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    VK_CHECK(vkCreateCommandPool(vk_context->device.logical_device, &pool_create_info, 
+        vk_context->allocator, &vk_context->device.graphics_command_pool));
+
+    KINFO("--Graphics command pool has been created.");
     return true;
 }
 
@@ -115,6 +124,10 @@ void vulkan_device_destroy(vulkan_context* vk_context) {
     vk_context->device.graphics_queue = 0;
     vk_context->device.present_queue = 0;
     vk_context->device.transfer_queue = 0;
+
+    KINFO("--Destroying command pools");
+    vkDestroyCommandPool(vk_context->device.logical_device, vk_context->device.graphics_command_pool,
+        vk_context->allocator);
 
 
     KINFO("----------------------------------Destroying logical device..");
@@ -377,7 +390,7 @@ b8 physical_device_meets_requirements(
             ));
 
             if(available_extensions_count != 0) {
-                available_extensions = static_cast<VkExtensionProperties*>(kmemory::allocate(
+                available_extensions = reinterpret_cast<VkExtensionProperties*>(kmemory::allocate(
                     sizeof(VkExtensionProperties) * available_extensions_count, MEMORY_TAG_RENDERER
                 ));
                 VK_CHECK(vkEnumerateDeviceExtensionProperties(
@@ -466,7 +479,7 @@ void vulkan_device_query_swapchain_support(VkPhysicalDevice physical_device,
     if(out_support_info->format_count != 0) {
         if(!out_support_info->formats) {
             // literally could use darray for these allocations management but we want to track it for renderer
-            out_support_info->formats = static_cast<VkSurfaceFormatKHR*>(
+            out_support_info->formats = reinterpret_cast<VkSurfaceFormatKHR*>(
                 kmemory::allocate(sizeof(VkSurfaceFormatKHR) * out_support_info->format_count, MEMORY_TAG_RENDERER)
             );
         }
@@ -481,7 +494,7 @@ void vulkan_device_query_swapchain_support(VkPhysicalDevice physical_device,
     
     if(out_support_info->present_mode_count != 0) {
         if(!out_support_info->present_modes) {
-            out_support_info->present_modes = static_cast<VkPresentModeKHR*>(
+            out_support_info->present_modes = reinterpret_cast<VkPresentModeKHR*>(
                 kmemory::allocate(sizeof(VkPresentModeKHR) * out_support_info->present_mode_count, MEMORY_TAG_RENDERER)
             );
         }
