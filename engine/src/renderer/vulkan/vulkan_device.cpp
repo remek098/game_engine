@@ -125,10 +125,9 @@ void vulkan_device_destroy(vulkan_context* vk_context) {
     vk_context->device.present_queue = 0;
     vk_context->device.transfer_queue = 0;
 
-    KINFO("--Destroying command pools");
-    vkDestroyCommandPool(vk_context->device.logical_device, vk_context->device.graphics_command_pool,
-        vk_context->allocator);
-
+    // KINFO("--Destroying command pools");
+    // vkDestroyCommandPool(vk_context->device.logical_device, vk_context->device.graphics_command_pool,
+    //     vk_context->allocator);
 
     KINFO("----------------------------------Destroying logical device..");
     if(vk_context->device.logical_device) {

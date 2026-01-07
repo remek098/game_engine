@@ -192,26 +192,52 @@ b8 vulkan_renderer_backend::initialize(renderer_backend_struct* backend, const c
 }
 
 void vulkan_renderer_backend::shutdown(renderer_backend_struct* backend) {
-    // free_command_buffers();
+    // // free_command_buffers();
+    // for(u32 i = 0; i < context.swapchain.image_count; ++i) {
+    //     if(context.graphics_command_buffers[i].handle) {
+    //         vulkan_command_buffer_free(&context, context.device.graphics_command_pool, &context.graphics_command_buffers[i]);
+    //         context.graphics_command_buffers[i].handle = 0;
+    //     }
+    // }
+    // vulkan_renderpass_destroy(&context, &context.main_renderpass);
+    // vulkan_swapchain_destroy(&context, &context.swapchain);
+    // vulkan_device_destroy(&context);
+    // platform::destroy_vulkan_surface(&context);
+    // KDEBUG("---- Destroying Vulkan debugger...");
+    // if(context.debug_messenger) {
+    //     PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, 
+    //         "vkDestroyDebugUtilsMessengerEXT");
+    //     func(context.instance, context.debug_messenger, context.allocator);
+    // }
 
-    for(u32 i = 0; i < context.swapchain.image_count; ++i) {
-        if(context.graphics_command_buffers[i].handle) {
-            vulkan_command_buffer_free(&context, context.device.graphics_command_pool, &context.graphics_command_buffers[i]);
-            context.graphics_command_buffers[i].handle = 0;
-        }
+    // KDEBUG("---- Destroying Vulkan Instance");
+    // vkDestroyInstance(context.instance, context.allocator);
+
+    if (context.device.logical_device != VK_NULL_HANDLE) {
+        vkDeviceWaitIdle(context.device.logical_device);
     }
+
     vulkan_renderpass_destroy(&context, &context.main_renderpass);
     vulkan_swapchain_destroy(&context, &context.swapchain);
-    platform::destroy_vulkan_surface(&context);
+
+    // 🔴 3. Destroy command pool (DO NOT free command buffers manually)
+    if (context.device.graphics_command_pool != VK_NULL_HANDLE) {
+        vkDestroyCommandPool(
+            context.device.logical_device,
+            context.device.graphics_command_pool,
+            context.allocator
+        );
+        context.device.graphics_command_pool = VK_NULL_HANDLE;
+    }
     vulkan_device_destroy(&context);
+    platform::destroy_vulkan_surface(&context);
     KDEBUG("---- Destroying Vulkan debugger...");
-    if(context.debug_messenger) {
-        PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, 
-            "vkDestroyDebugUtilsMessengerEXT");
+    if (context.debug_messenger) {
+        auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)
+            vkGetInstanceProcAddr(context.instance, "vkDestroyDebugUtilsMessengerEXT");
         func(context.instance, context.debug_messenger, context.allocator);
     }
 
-    KDEBUG("---- Destroying Vulkan Instance");
     vkDestroyInstance(context.instance, context.allocator);
 }
 
