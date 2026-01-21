@@ -16,7 +16,14 @@ public:
 private:
     static i32 find_memory_index(u32 type_filter, u32 property_flags);
     static void create_command_buffers(renderer_backend_struct* backend);
+
+    // when things like window height or width change, we will have to regenerate those as well
+    static void regenerate_framebuffers(renderer_backend_struct* backend, vulkan_swapchain* swapchain, vulkan_renderpass* renderpass);
     // static void free_command_buffers();
+
+private:
+    static u32 cached_framebuffer_width;
+    static u32 cached_framebuffer_height;
 public:
     static vulkan_context context;
 };

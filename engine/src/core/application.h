@@ -14,7 +14,7 @@ typedef struct application_state {
     platform* platform;
     i16 width;
     i16 height;
-    clock clock;
+    class clock clock;
     f64 last_time;
 } application_state;
 
@@ -42,9 +42,10 @@ public:
     // static b8 create(i16 x, i16 y, i16 width, i16 height, const std::string& app_name);
     static b8 create(struct game* game_inst);
     static b8 run();
+
+    static void app_get_framebuffer_size(u32* width, u32* height);
 private:
     // application's event handlers
     static b8 app_on_event(u16 code, void* sender, void* listener_inst, event_context context);
     static b8 app_on_key(u16 code, void* sender, void* listener_inst, event_context context);
-
 };

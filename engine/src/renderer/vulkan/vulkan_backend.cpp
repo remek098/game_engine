@@ -4,15 +4,22 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_renderpass.h"
 #include "vulkan_command_buffer.h"
+#include "vulkan_framebuffer.h"
+#include "vulkan_fence.h"
 
 #include "core/logger.h"
 #include "core/kstring.h"
 #include "containers/darray.h"
 #include "platform/platform.h"
 
+#include "core/application.h"
+
 // static vulkan_context, already zero'ed out by default
 vulkan_context vulkan_renderer_backend::context;
 
+
+u32 vulkan_renderer_backend::cached_framebuffer_width = 0;
+u32 vulkan_renderer_backend::cached_framebuffer_height = 0;
 
 // any forward declerations
 VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
@@ -28,6 +35,12 @@ b8 vulkan_renderer_backend::initialize(renderer_backend_struct* backend, const c
 
     // TODO: Custom allocator
     context.allocator = 0;
+    
+    application::app_get_framebuffer_size(&cached_framebuffer_width, &cached_framebuffer_height);
+    context.framebuffer_width = (cached_framebuffer_width != 0) ? cached_framebuffer_width : 800;
+    context.framebuffer_height = (cached_framebuffer_height != 0) ? cached_framebuffer_height : 600;
+    cached_framebuffer_width = 0;
+    cached_framebuffer_height = 0;
 
     // setup vulkan instance
     VkApplicationInfo app_info = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
@@ -185,7 +198,34 @@ b8 vulkan_renderer_backend::initialize(renderer_backend_struct* backend, const c
         0
     );
 
+    context.swapchain.framebuffers = 
+        reinterpret_cast<vulkan_framebuffer*>(kmemory::allocate(sizeof(vulkan_framebuffer) * context.swapchain.image_count, MEMORY_TAG_RENDERER));
+    for(u32 i = 0; i < context.swapchain.image_count; ++i) {
+        kmemory::zero(&context.swapchain.framebuffers[i], sizeof(vulkan_framebuffer));
+    }
+    regenerate_framebuffers(backend, &context.swapchain, &context.main_renderpass);
+
     create_command_buffers(backend);
+
+    // create sync objects
+    context.image_available_semaphores = reinterpret_cast<VkSemaphore*>(darray_reserve(VkSemaphore, context.swapchain.max_frames_in_flight));
+    context.queue_completed_semaphores = reinterpret_cast<VkSemaphore*>(darray_reserve(VkSemaphore, context.swapchain.max_frames_in_flight));
+    context.in_flight_fences = reinterpret_cast<vulkan_fence*>(darray_reserve(vulkan_fence, context.swapchain.max_frames_in_flight));
+
+    for(u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i) {
+        VkSemaphoreCreateInfo semaphore_ci = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+        VK_CHECK(vkCreateSemaphore(context.device.logical_device, &semaphore_ci, context.allocator, &context.image_available_semaphores[i]));
+        VK_CHECK(vkCreateSemaphore(context.device.logical_device, &semaphore_ci, context.allocator, &context.queue_completed_semaphores[i]));
+
+        vulkan_fence_create(&context, true, &context.in_flight_fences[i]);
+    }
+
+    // in flight fences should not yet exist at this point, so clear the list. These are stored in pointers 
+    // because initial state should be 0, and will be 0 when not in use. Actual fences are not owned by this list
+    context.images_in_fligth = reinterpret_cast<vulkan_fence**>(darray_reserve(vulkan_fence, context.swapchain.image_count));
+    for(u32 i = 0; i < context.swapchain.image_count; ++i) {
+        context.images_in_fligth[i] = 0;
+    }
 
     KINFO("Vulkan renderer initialized successfully.");
     return true;
@@ -193,12 +233,6 @@ b8 vulkan_renderer_backend::initialize(renderer_backend_struct* backend, const c
 
 void vulkan_renderer_backend::shutdown(renderer_backend_struct* backend) {
     // // free_command_buffers();
-    // for(u32 i = 0; i < context.swapchain.image_count; ++i) {
-    //     if(context.graphics_command_buffers[i].handle) {
-    //         vulkan_command_buffer_free(&context, context.device.graphics_command_pool, &context.graphics_command_buffers[i]);
-    //         context.graphics_command_buffers[i].handle = 0;
-    //     }
-    // }
     // vulkan_renderpass_destroy(&context, &context.main_renderpass);
     // vulkan_swapchain_destroy(&context, &context.swapchain);
     // vulkan_device_destroy(&context);
@@ -216,6 +250,42 @@ void vulkan_renderer_backend::shutdown(renderer_backend_struct* backend) {
     if (context.device.logical_device != VK_NULL_HANDLE) {
         vkDeviceWaitIdle(context.device.logical_device);
     }
+
+    // destroy sync objects
+    for(u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i) {
+        if(context.image_available_semaphores[i]) {
+            vkDestroySemaphore(context.device.logical_device, context.image_available_semaphores[i], context.allocator);
+            context.image_available_semaphores[i] = 0;
+        }
+
+        if(context.queue_completed_semaphores[i]) {
+            vkDestroySemaphore(context.device.logical_device, context.queue_completed_semaphores[i], context.allocator);
+            context.queue_completed_semaphores[i] = 0;
+        }
+
+        vulkan_fence_destroy(&context, &context.in_flight_fences[i]);
+    }
+    darray_destroy(context.image_available_semaphores);
+    // kmemory::free(context.image_available_semaphores, sizeof(VkSemaphore) * context.swapchain.max_frames_in_flight, MEMORY_TAG_DARRAY);
+    context.image_available_semaphores = 0;
+
+    darray_destroy(context.queue_completed_semaphores);
+    // kmemory::free(context.queue_completed_semaphores, sizeof(VkSemaphore) * context.swapchain.max_frames_in_flight, MEMORY_TAG_DARRAY);
+    context.queue_completed_semaphores = 0;
+
+    darray_destroy(context.in_flight_fences);
+    context.in_flight_fences = 0;
+
+    darray_destroy(context.images_in_fligth);
+    // kmemory::free(context.queue_completed_semaphores, sizeof(vulkan_fence) * context.swapchain.max_frames_in_flight, MEMORY_TAG_DARRAY);
+    context.images_in_fligth = 0;
+
+
+    for(u32 i = 0; i < context.swapchain.image_count; ++i) {
+        vulkan_framebuffer_destroy(&context, &context.swapchain.framebuffers[i]);
+        // KDEBUG("-- did destroy attachment %i", i);
+    }
+    kmemory::free(context.swapchain.framebuffers, sizeof(vulkan_framebuffer) * context.swapchain.image_count, MEMORY_TAG_RENDERER);
 
     vulkan_renderpass_destroy(&context, &context.main_renderpass);
     vulkan_swapchain_destroy(&context, &context.swapchain);
@@ -303,14 +373,28 @@ void vulkan_renderer_backend::create_command_buffers(renderer_backend_struct* ba
     }
 
     for(u32 i = 0; i < context.swapchain.image_count; ++i) {
-        if(context.graphics_command_buffers[i].handle) {
-            vulkan_command_buffer_free(&context, context.device.graphics_command_pool, &context.graphics_command_buffers[i]);
-        }
+        // if(context.graphics_command_buffers[i].handle) {
+        //     vulkan_command_buffer_free(&context, context.device.graphics_command_pool, &context.graphics_command_buffers[i]);
+        // }
         kmemory::zero(&context.graphics_command_buffers[i], sizeof(vulkan_command_buffer));
         vulkan_command_buffer_allocate(&context, context.device.graphics_command_pool, true, &context.graphics_command_buffers[i]);
     }
 
     KDEBUG("--Vulkan command buffers created.");
+}
+
+void vulkan_renderer_backend::regenerate_framebuffers(renderer_backend_struct* backend, vulkan_swapchain* swapchain, vulkan_renderpass* renderpass) {
+    for(u32 i = 0; i < swapchain->image_count; ++i) {
+        // TODO: make this dynamic based on the currently configured attachments
+        u32 attachment_count = 2;
+        VkImageView attachments[] = {
+            swapchain->image_views[i],
+            swapchain->depth_attachment.view
+        };
+
+        vulkan_framebuffer_create(&context, renderpass, context.framebuffer_width, context.framebuffer_height, 
+            attachment_count, attachments, &context.swapchain.framebuffers[i]);
+    }
 }
 
 // void vulkan_renderer_backend::free_command_buffers() {

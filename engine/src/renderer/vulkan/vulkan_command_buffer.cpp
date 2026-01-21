@@ -24,7 +24,7 @@ void vulkan_command_buffer_free(
     VkCommandPool cmd_pool,
     vulkan_command_buffer* command_buffer
 ) {
-    if(command_buffer->handle == VK_NULL_HANDLE)
+    if(command_buffer->handle != VK_NULL_HANDLE)
         vkFreeCommandBuffers(context->device.logical_device, cmd_pool, 1, &command_buffer->handle);
     
     command_buffer->handle = 0;
