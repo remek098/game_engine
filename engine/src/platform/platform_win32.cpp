@@ -253,12 +253,16 @@ LRESULT CALLBACK win32_process_messages(HWND hWnd, u32 msg, WPARAM w_param, LPAR
 
         case WM_SIZE: {
             // Get the updated size of window
-            // RECT r;
-            // GetClientRect(hWnd, &r);
-            // u32 width = r.right - r.left;
-            // u32 height = r.bottom - r.top;
+            RECT r;
+            GetClientRect(hWnd, &r);
+            u32 width = r.right - r.left;
+            u32 height = r.bottom - r.top;
 
-            // TODO: Fire an event for window resize.
+            // fire the event. The application layer should pick this up, but not handle it as it shouldn't be visible to other parts of the application.
+            event_context context;
+            context.data.u16[0] = (u16)width;
+            context.data.u16[1] = (u16)height;
+            event_system::fire_event(EVENT_CODE_RESIZED, 0, context);
         } break;
 
         case WM_KEYDOWN:

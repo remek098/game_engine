@@ -85,6 +85,7 @@ u64 length -> number of elements currently contained
 u64 stride -> size of each element in bytes
 */
 
+// use it like RAII if you want to keep objects/data alive in program
 template<typename T>
 class KAPI darray {
 public:

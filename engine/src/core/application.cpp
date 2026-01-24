@@ -80,6 +80,7 @@ b8 application::create(game* game_inst) {
     event_system::register_event(EVENT_CODE_APPLICATION_QUIT, 0, &application::app_on_event);
     event_system::register_event(EVENT_CODE_KEY_PRESSED, 0, &application::app_on_key);
     event_system::register_event(EVENT_CODE_KEY_RELEASED, 0, &application::app_on_key);
+    event_system::register_event(EVENT_CODE_RESIZED, 0, &application::app_on_resized);
     
 
     // deleted at the end of application::run()
@@ -193,6 +194,7 @@ b8 application::run() {
     event_system::unregister_event(EVENT_CODE_APPLICATION_QUIT, 0, &application::app_on_event);
     event_system::unregister_event(EVENT_CODE_KEY_PRESSED, 0, &application::app_on_key);
     event_system::unregister_event(EVENT_CODE_KEY_RELEASED, 0, &application::app_on_key);
+    event_system::unregister_event(EVENT_CODE_RESIZED, 0, &application::app_on_resized);
 
     // event_system::shutdown() automatically cleans up all events. Ofc we will have to unregister events
     // during runtime of application later on.
@@ -261,5 +263,38 @@ b8 application::app_on_key(u16 code, void* sender, void* listener_inst, event_co
             KDEBUG("'%c' key released in window", key_code);
         }
     }
+    return false;
+}
+
+b8 application::app_on_resized(u16 code, void* sender, void* listener_inst, event_context context) {
+    if(code == EVENT_CODE_RESIZED) {
+        u16 width = context.data.u16[0];
+        u16 height = context.data.u16[1];
+
+        // check if diffrent. If so, trigger a resize event.
+        if(width != app_state.width || height != app_state.height) {
+            app_state.width = width;
+            app_state.height = height;
+
+            KDEBUG("Window resize occured: %i, %i", width, height);
+
+            // handle minimalization of window
+            if(width == 0 || height == 0) {
+                KINFO("Window minimized, suspending application.");
+                app_state.is_suspended = true;
+                return true;
+            }
+            else {
+                if(app_state.is_suspended) {
+                    KINFO("Window restored, resuming application.");
+                    app_state.is_suspended = false;
+                }
+                app_state.game_inst->on_resize(app_state.game_inst, width, height);
+                renderer::on_resized(width, height);
+            }
+        }
+    }
+
+    // event purposefully not handled to allow other listeners to get this.
     return false;
 }

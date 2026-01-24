@@ -221,6 +221,8 @@ void create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* sw
 }
 
 void destroy(vulkan_context* context, vulkan_swapchain* swapchain) {
+    vkDeviceWaitIdle(context->device.logical_device);
+
     // NOTE: allocations so far: 
     /**
      * 1)  (formats and present_modes) in swapchain -> actually this is freed by vulkan_device_destroy(); since this memory is owned by vulkan_device
@@ -238,7 +240,9 @@ void destroy(vulkan_context* context, vulkan_swapchain* swapchain) {
 
     vkDestroySwapchainKHR(context->device.logical_device, swapchain->handle, context->allocator);
 
-
+    vkDeviceWaitIdle(context->device.logical_device);
     kmemory::free(swapchain->images, sizeof(VkImage) * swapchain->image_count, MEMORY_TAG_RENDERER);
     kmemory::free(swapchain->image_views, sizeof(VkImageView) * swapchain->image_count, MEMORY_TAG_RENDERER);
+    swapchain->images = nullptr;
+    swapchain->image_views = nullptr;
 }

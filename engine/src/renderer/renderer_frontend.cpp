@@ -37,6 +37,15 @@ b8 renderer::end_frame(f32 delta_time) {
     return result;
 }
 
+void renderer::on_resized(u16 width, u16 height) {
+    if(backend) {
+        backend->resized(backend, width, height);
+    }
+    else {
+        KWARN("renderer backend does not exist to accept resize: %i %i", width, height);
+    }
+}
+
 b8 renderer::draw_frame(render_packet* packet) {
     // if  this returns true, mid-frame operations may continue
     if(begin_frame(packet->delta_time)) {

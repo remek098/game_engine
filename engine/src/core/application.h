@@ -48,4 +48,5 @@ private:
     // application's event handlers
     static b8 app_on_event(u16 code, void* sender, void* listener_inst, event_context context);
     static b8 app_on_key(u16 code, void* sender, void* listener_inst, event_context context);
+    static b8 app_on_resized(u16 code, void* sender, void* listener_inst, event_context context);
 };

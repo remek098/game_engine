@@ -3,7 +3,7 @@
 #include "vulkan_types.inl"
 
 // NOTE: We don't have vec4 struct yet, we can refactor this stuff later
-void vulkan_renderass_create(
+void vulkan_renderpass_create(
     vulkan_context* context,
     vulkan_renderpass* out_renderpass,
     f32 x, f32 y, f32 w, f32 h,

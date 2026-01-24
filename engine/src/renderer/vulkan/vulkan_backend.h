@@ -21,6 +21,8 @@ private:
     static void regenerate_framebuffers(renderer_backend_struct* backend, vulkan_swapchain* swapchain, vulkan_renderpass* renderpass);
     // static void free_command_buffers();
 
+    static b8 recreate_swapchain(renderer_backend_struct* backend);
+
 private:
     static u32 cached_framebuffer_width;
     static u32 cached_framebuffer_height;
