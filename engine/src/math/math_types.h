@@ -79,3 +79,12 @@ typedef union vec4_u {
 
 
 typedef vec4 quat;
+
+typedef union mat4_u {
+    alignas(16) f32 data[16];
+
+#if defined(KUSE_SIMD)
+    // used for SIMD operations
+    alignas(16) vec4 rows[4];
+#endif
+} mat4;
