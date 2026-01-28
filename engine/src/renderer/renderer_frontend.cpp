@@ -25,6 +25,7 @@ b8 renderer::initialize(const char* application_name, platform_state* plat_state
 void renderer::shutdown() {
     backend->shutdown(backend);
     kmemory::free(backend, sizeof(renderer_backend_struct), MEMORY_TAG_RENDERER);
+    backend = 0;
 }
 
 b8 renderer::begin_frame(f32 delta_time) {

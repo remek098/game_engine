@@ -303,6 +303,7 @@ void vulkan_renderer_backend::shutdown(renderer_backend_struct* backend) {
         // KDEBUG("-- did destroy attachment %i", i);
     }
     kmemory::free(context.swapchain.framebuffers, sizeof(vulkan_framebuffer) * context.swapchain.image_count, MEMORY_TAG_RENDERER);
+    context.swapchain.framebuffers = 0;
 
     vulkan_renderpass_destroy(&context, &context.main_renderpass);
     vulkan_swapchain_destroy(&context, &context.swapchain);

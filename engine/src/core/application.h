@@ -14,7 +14,7 @@ typedef struct application_state {
     platform* platform;
     i16 width;
     i16 height;
-    class clock clock;
+    class kclock clock;
     f64 last_time;
 } application_state;
 

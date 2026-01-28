@@ -2,10 +2,10 @@
 
 #include "defines.h"
 
-class KAPI clock {
+class KAPI kclock {
 public:
-    clock() = default;
-    ~clock();
+    kclock() = default;
+    ~kclock();
     // starts the clock. Resets elapsed time;
     void start();
     void stop();

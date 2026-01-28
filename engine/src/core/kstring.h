@@ -2,6 +2,9 @@
 
 #include "defines.h"
 
+#include <stdio.h>
+#include <stdarg.h>
+
 class KAPI kstring {
 public:
     kstring(const char* str = "");
@@ -22,6 +25,10 @@ public:
     bool equals(const kstring& other) const;
     static bool are_equal(const char* str1, const char* str2);
     const char* c_str() const;
+
+    static i32 format(char* dest, const char* format, ...);
+
+    static i32 string_format_v(char* dest, const char* format, va_list args) ;
 
 private:
     char* data;

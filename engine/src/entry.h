@@ -5,6 +5,8 @@
 #include "core/kmemory.h"
 #include "game_types.h"
 
+// #include <iostream>
+
 // #include <../../testbed/src/game.h>
 
 extern b8 create_game(game* out_game);
@@ -52,5 +54,7 @@ int main() {
     kmemory::shutdown();
     // KINFO("From main():\n")
     // KINFO(kmemory::get_memory_usage_string());
+    // std::cout << "Press Enter to exit...";
+    // std::cin.get();
     return 0;
 }

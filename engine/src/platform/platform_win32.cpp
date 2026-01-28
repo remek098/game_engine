@@ -272,6 +272,46 @@ LRESULT CALLBACK win32_process_messages(HWND hWnd, u32 msg, WPARAM w_param, LPAR
             // key pressed/released
             b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
             keyboard_keys key = (keyboard_keys)w_param;
+
+            // if(w_param == VK_MENU) {
+            //     if(GetKeyState(VK_RMENU) & 0x8000) {
+            //         key = KEYBOARD_KEY_RALT;
+            //     }
+            //     else if(GetKeyState(VK_LMENU) & 0x8000) {
+            //         key = KEYBOARD_KEY_LALT;
+            //     }
+            // }
+            // else if(w_param == VK_SHIFT) {
+            //     if(GetKeyState(VK_RSHIFT) & 0x8000) {
+            //         key = KEYBOARD_KEY_RSHIFT;
+            //     }
+            //     else if(GetKeyState(VK_LSHIFT) & 0x8000) {
+            //         key = KEYBOARD_KEY_LSHIFT;
+            //     }
+            // }
+            // else if(w_param == VK_CONTROL) {
+            //     if(GetKeyState(VK_RCONTROL) & 0x8000) {
+            //         key = KEYBOARD_KEY_RCONTROL;
+            //     }
+            //     else if(GetKeyState(VK_LCONTROL) & 0x8000) {
+            //         key = KEYBOARD_KEY_LCONTROL;
+            //     }
+            // }
+
+            b8 is_extended = (l_param & (1 << 24)) != 0;
+            if(w_param == VK_MENU) {
+                key = is_extended ? KEYBOARD_KEY_RALT : KEYBOARD_KEY_LALT;
+            }
+            else if (w_param == VK_CONTROL) {
+                key = is_extended ? KEYBOARD_KEY_RCONTROL : KEYBOARD_KEY_LCONTROL;
+            }
+            else if(w_param == VK_SHIFT) {
+                u32 scancode = (l_param >> 16) & 0xFF;
+                u32 vk = MapVirtualKey(scancode, MAPVK_VSC_TO_VK_EX);
+
+                key = vk == VK_LSHIFT ? KEYBOARD_KEY_LSHIFT : KEYBOARD_KEY_RSHIFT;
+            }
+
             
             input_system::process_key(key, pressed); // pass to process input
         } break;

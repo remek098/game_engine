@@ -368,10 +368,12 @@ b8 physical_device_meets_requirements(
             if(out_swapchain_support_info->formats) {
                 kmemory::free(out_swapchain_support_info->formats, 
                     sizeof(VkSurfaceFormatKHR) * out_swapchain_support_info->format_count, MEMORY_TAG_RENDERER);
+                out_swapchain_support_info->formats = 0;
             }
             if(out_swapchain_support_info->present_modes) {
                 kmemory::free(out_swapchain_support_info->present_modes, 
                     sizeof(VkPresentModeKHR) * out_swapchain_support_info->present_mode_count, MEMORY_TAG_RENDERER);
+                out_swapchain_support_info->present_modes = 0;
             }
             KINFO("-- Required swapchain support not present, skipping device");
             return false;

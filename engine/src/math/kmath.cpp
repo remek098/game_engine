@@ -41,7 +41,7 @@ i32 kmath::krandom() {
 i32 kmath::krandom_in_range(i32 min, i32 max) {
     if (!rand_seeded) {
         srand((u32)platform::get_absolute_time());
-        rand_seeded = TRUE;
+        rand_seeded = true;
     }
     return (rand() % (max - min + 1)) + min;
 }

@@ -31,7 +31,7 @@ KAPI void _darray_pop(void* array, void* dest);
 KAPI void* _darray_pop_at(void* array, u64 index, void* dest);
 KAPI void* _darray_insert_at(void* array, u64 index, void* value_ptr);
 
-#define create_darray(type) \
+#define darray_create(type) \
     _darray_create(DARRAY_DEFAULT_CAPACITY, sizeof(type))
 
 #define darray_destroy(array) _darray_destroy(array);
@@ -87,7 +87,7 @@ u64 stride -> size of each element in bytes
 
 // use it like RAII if you want to keep objects/data alive in program
 template<typename T>
-class KAPI darray {
+class darray {
 public:
 
 // constructor based and manual option of managing object are available

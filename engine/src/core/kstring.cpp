@@ -100,3 +100,32 @@ bool kstring::are_equal(const char* str1, const char* str2) {
 const char* kstring::c_str() const {
     return data;
 }
+
+i32 kstring::format(char* dest, const char* format, ...) {
+    if (dest) {
+        __builtin_va_list arg_ptr; // might have to do va_list
+        va_start(arg_ptr, format);
+        i32 written = string_format_v(dest, format, arg_ptr);
+        va_end(arg_ptr);
+        return written;
+    }
+    return -1;
+}
+
+i32 kstring::string_format_v(char* dest, const char* format, va_list args) {
+    if (dest) {
+        // Big, but can fit on the stack.
+        char buffer[32000];
+
+        va_list args_copy;
+        va_copy(args_copy, args);
+        i32 written = vsnprintf(buffer, 32000, format, args_copy);
+        va_end(args_copy);
+
+        buffer[written] = 0;
+        kmemory::copy(dest, buffer, written + 1);
+
+        return written;
+    }
+    return -1;
+}

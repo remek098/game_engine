@@ -14,7 +14,7 @@
             "cwd": "${workspaceFolder}/bin/",
             "environment": [],
             "console": "integratedTerminal",
-            //"console": "newExternalWindow",
+            // "console": "newExternalWindow",
         },
         {
             "name": "(Linux) Launch",

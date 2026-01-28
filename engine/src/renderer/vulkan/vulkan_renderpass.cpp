@@ -29,7 +29,7 @@ void vulkan_renderpass_create(
     
     // Attachments      
     // TODO: make this configurable
-    u32 attachment_description_count = 2;
+    const u32 attachment_description_count = 2;
     VkAttachmentDescription attachment_descriptions[attachment_description_count];
 
     // 1) Color attachment

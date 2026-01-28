@@ -211,6 +211,7 @@ b8 application::run() {
 
 
     kmemory::free(app_state.game_inst->state, sizeof(game_state), MEMORY_TAG_GAME);
+    app_state.game_inst->state = 0;
     // KINFO("From application::run:")
     // KINFO(kmemory::get_memory_usage_string());
     return true;
@@ -250,7 +251,7 @@ b8 application::app_on_key(u16 code, void* sender, void* listener_inst, event_co
             KDEBUG("Explicit - A was pressed!");
         }
         else {
-            KDEBUG("'%c' key released in window", key_code);
+            KDEBUG("'%c' key pressed in window", key_code);
         }
     }
     else if(code == EVENT_CODE_KEY_RELEASED) {
