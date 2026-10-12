@@ -25,13 +25,14 @@ typedef struct event_system_state {
 
 // Event system internal state
 b8                  event_system::is_initialized = false;
-event_system_state  event_system::state = {};
+event_system_state  event_system::state;
 
 b8 event_system::initialize() {
     if(is_initialized == true) {
         return false;
     }
     is_initialized = false;
+    state = {};
     kmemory::zero(&state, sizeof(state));
 
     is_initialized = true;
@@ -48,7 +49,8 @@ void event_system::shutdown() {
             state.registered[i].events.destroy();
         }
     }
-    
+    state.registered->events.clear();
+    state.registered->events.destroy();
     is_initialized = false;
 }
 

@@ -9,8 +9,8 @@
 // could move it to .h file and make a static private field for stats, but it's only relevant in this cpp file anyway and we 
 // will have an access to kmemory::get_memory_usage_string() anyway to track our allocations in console environment
 struct memory_stats {
-    u64 total_allocated;
-    u64 tagged_allocations[MEMORY_TAG_MAX_TAGS];
+    u64 total_allocated{0};
+    u64 tagged_allocations[MEMORY_TAG_MAX_TAGS]{};
 };
 
 static const char* memory_tag_strings[MEMORY_TAG_MAX_TAGS] = {
@@ -34,25 +34,43 @@ static const char* memory_tag_strings[MEMORY_TAG_MAX_TAGS] = {
     "SCENE       "
 };
 
-static struct memory_stats stats;
+
+
+typedef struct memory_system_state {
+    struct memory_stats stats;
+
+} memory_system_state;
+
+static memory_system_state* state_ptr = nullptr; // = static_cast<memory_system_state*>(platform::allocate(sizeof(memory_system_state), false));
 
 void kmemory::initialize() {
-    platform::zero_memory(&stats, sizeof(stats));
+    //state_ptr = static_cast<memory_system_state*>(platform::allocate(sizeof(memory_system_state), false));
+    if(!state_ptr) {
+        state_ptr = static_cast<memory_system_state*>(platform::allocate(sizeof(memory_system_state), false));
+        platform::zero_memory(&state_ptr->stats, sizeof(memory_stats));
+    }
 }
 
 void kmemory::shutdown() {
     KINFO("From kmemory::shutdown():");
     KINFO(get_memory_usage_string());
+    platform::free(state_ptr, false);
+
 }
 
 
 void* kmemory::allocate(u64 size, memory_tags tag) {
+    if(!state_ptr) {
+        kmemory::initialize();
+    }
+    
+
     if(tag == MEMORY_TAG_UNKNOWN) {
         KWARN("kmemory::allocate() called using MEMORY_TAG_UNKNOWN. Re-class this allocation.");
     }
 
-    stats.total_allocated += size; // size in bytes
-    stats.tagged_allocations[tag] += size;
+    state_ptr->stats.total_allocated += size; // size in bytes
+    state_ptr->stats.tagged_allocations[tag] += size;
 
     // TODO: Memory alignment
     void* block = platform::allocate(size, false);
@@ -67,13 +85,13 @@ void kmemory::free(void* block, u64 size, memory_tags tag) {
         KWARN("kmemory::free() called using MEMORY_TAG_UNKNOWN. Re-class this allocation.");
     }
 
-    stats.total_allocated -= size; // size in bytes
-    stats.tagged_allocations[tag] -= size;
     
     // TODO: Memory alignment
     platform::free(block, false);
     // KDEBUG("kmemory::free -> DARRAY allocation size: %i", stats.tagged_allocations[MEMORY_TAG_DARRAY]);
     // KINFO(kmemory::get_memory_usage_string());
+    state_ptr->stats.total_allocated -= size; // size in bytes
+    state_ptr->stats.tagged_allocations[tag] -= size;
 }
 
 
@@ -103,22 +121,22 @@ char* kmemory::get_memory_usage_string() {
     for(u32 i = 0; i < MEMORY_TAG_MAX_TAGS; ++i) {
         char unit[4] = "XiB";
         float amount = 1.0f;
-        if(stats.tagged_allocations[i] >= gib) {
+        if(state_ptr->stats.tagged_allocations[i] >= gib) {
             unit[0] = 'G';
-            amount = stats.tagged_allocations[i] / (f32)gib;
+            amount = state_ptr->stats.tagged_allocations[i] / (f32)gib;
         }
-        else if(stats.tagged_allocations[i] >= mib) {
+        else if(state_ptr->stats.tagged_allocations[i] >= mib) {
             unit[0] = 'M';
-            amount = stats.tagged_allocations[i] / (f32)mib;
+            amount = state_ptr->stats.tagged_allocations[i] / (f32)mib;
         }
-        else if(stats.tagged_allocations[i] >= kib) {
+        else if(state_ptr->stats.tagged_allocations[i] >= kib) {
             unit[0] = 'K';
-            amount = stats.tagged_allocations[i] / (f32)kib;
+            amount = state_ptr->stats.tagged_allocations[i] / (f32)kib;
         }
         else {
             unit[0] = 'B';
             unit[1] = 0; // NULL char
-            amount = (f32)stats.tagged_allocations[i];
+            amount = (f32)state_ptr->stats.tagged_allocations[i];
         }
 
         i32 length = snprintf(buffer + offset, 8000, "  %s: %.2f%s\n", memory_tag_strings[i], amount, unit);

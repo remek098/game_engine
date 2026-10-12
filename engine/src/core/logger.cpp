@@ -7,17 +7,40 @@
 #include <string.h>
 #include <stdarg.h>
 
+typedef struct logger_system_state {
+    b8 initialized;
+} logger_system_state;
+
+static logger_system_state* state_ptr;
+
 void report_assertion_failure(const char* expression, const char* message, const char* file, i32 line) {
     log_output(log_level::LOG_LEVEL_FATAL, "Assertion failure: %s, message: '%s', in file: %s, line: %d\n", expression, message, file, line);
 }
 
-bool initialize_logging() {
+b8 initialize_logging(u64* memory_requirement, void* state) {
+    *memory_requirement = sizeof(logger_system_state);
+    if(state == 0) {
+        return true;
+    }
+
+    state_ptr = (logger_system_state*)state;
+    state_ptr->initialized = true;
+
+    // TODO: Remove this.
+    KFATAL("Test message: %f", 3.14f);
+    KERROR("Test message: %f", 3.14f);
+    KWARN("Test message: %f", 3.14f);
+    KINFO("Test message: %f", 3.14f);
+    KDEBUG("Test message: %f", 3.14f);
+    KTRACE("Test message: %f", 3.14f);
+
     // TODO: Create log file
     return true;
 }
 
-void shutdown_logging() {
+void shutdown_logging(void* state) {
     // TODO: Cleanup logging/write queued entries.
+    state_ptr = 0;
 }
 
 void log_output(log_level level, const char* message, ...) {

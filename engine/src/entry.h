@@ -16,8 +16,7 @@ extern b8 create_game(game* out_game);
 The main entry point of the application.
 */
 int main() {
-    kmemory::initialize();
-    
+    // kmemory::initialize();
     // request game instance from application
     game game_inst = {};
     if(!create_game(&game_inst)) {
@@ -30,7 +29,6 @@ int main() {
         return -2;
     }
 
-    
     application* app = new application();
     
     // initialization
@@ -51,7 +49,7 @@ int main() {
     // kmemory::free(&game_inst.state, sizeof(game_state), MEMORY_TAG_GAME);
     delete app;
     // delete game_inst;
-    kmemory::shutdown();
+    // kmemory::shutdown();
     // KINFO("From main():\n")
     // KINFO(kmemory::get_memory_usage_string());
     // std::cout << "Press Enter to exit...";

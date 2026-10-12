@@ -5,7 +5,10 @@
 #include "core/clock.h"
 // #include "game_types.h"
 
+#include "memory/linear_allocator.h"
+
 struct game;
+// extern b8 create_game(game* out_game);
 
 typedef struct application_state {
     game* game_inst;
@@ -16,6 +19,10 @@ typedef struct application_state {
     i16 height;
     class kclock clock;
     f64 last_time;
+    linear_allocator systems_allocator;
+
+    u64 logging_system_memory_requirement;
+    void* logging_system_state;
 } application_state;
 
 
@@ -35,8 +42,8 @@ public:
     ~application();
 
     // false by default, true only once we initialize our application
-    static b8 is_initialized;
-    static application_state app_state;
+    // static b8 is_initialized;
+    static application_state* app_state;
     // static application_config app_config;
     
     // static b8 create(i16 x, i16 y, i16 width, i16 height, const std::string& app_name);

@@ -25,4 +25,7 @@ typedef struct game {
 
     // game() : app_config{}, initialize(nullptr), update(nullptr),
     //          render(nullptr), on_resize(nullptr), state(nullptr) {}
+
+    // application state.
+    void* application_state;
 } game;

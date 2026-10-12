@@ -4,10 +4,10 @@
 
 // TODO: Remove this once we have a better way of allocating
 // #include <platform/platform.h>
-#include <core/kmemory.h>
+// #include <core/kmemory.h>
 
 b8 create_game(game* out_game) {
-    
+    kmemory::initialize();
     out_game->app_config.start_pos_x = 100;
     out_game->app_config.start_pos_y = 100;
     out_game->app_config.start_width = 1280;
@@ -20,6 +20,7 @@ b8 create_game(game* out_game) {
     
     // create game state
     out_game->state = kmemory::allocate(sizeof(game_state), MEMORY_TAG_GAME);
+    out_game->application_state = 0;
     
     return true;
 }

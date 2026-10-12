@@ -214,6 +214,7 @@ b8 vulkan_renderer_backend::initialize(renderer_backend_struct* backend, const c
     // NOTE: changing to see if it hels
     context.queue_completed_semaphores = reinterpret_cast<VkSemaphore*>(darray_reserve(VkSemaphore, context.swapchain.image_count));
     context.in_flight_fences = reinterpret_cast<vulkan_fence*>(darray_reserve(vulkan_fence, context.swapchain.max_frames_in_flight));
+    
 
     for(u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i) {
         VkSemaphoreCreateInfo semaphore_ci = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
